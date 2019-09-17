@@ -271,6 +271,7 @@ class Sensors {
     var auxSen=[];
     var index=0;
     var cn=DEFAULT_COUNT;
+    var mode=0;
     //var nextIndex=1;
     this.sen.sort((a, b) => (a.id > b.id) ? 1 : -1)
     if(info.count) {
@@ -285,7 +286,7 @@ class Sensors {
 
     /**************************************/
     if(info.model){
-    var mode=0;
+   
     //console.log(info.count);
     for(var i=index; i<this.sen.length;i++){
       
