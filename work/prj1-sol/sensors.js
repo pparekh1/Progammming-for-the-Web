@@ -12,9 +12,12 @@ class Sensors {
      this.sen=[];
      this.senData=[];
      this.nextIndex=0;
-     this.noArgs=[];
+     //this.noArgs=[];
      this.sensorArr=[];
      this.dataArr=[];
+     this.nextIndex;
+     this.indexSensor;
+     
      
      this.type;
   }
@@ -48,16 +51,12 @@ class Sensors {
       }
       } 
       if(mode===1){
-        console.log("Already present");
+        throw ['Already present'];
       }
       else {
        
         this.senType.push(info);
       }
-    
-  
-    
-
   }
   
   /** Subject to field validation as per FN_INFOS.addSensor, add
@@ -87,9 +86,9 @@ class Sensors {
       if(mode===1){
         this.sen.push(info);
       }
-      // else {
-      //   console.log("absent");
-      // }
+      else {
+        throw ['The sensor is not valid'];
+      }
     
     
     
@@ -117,9 +116,7 @@ class Sensors {
         this.senData.push(info);
       }
       else {
-        
-        
-        throw "Absent";
+        throw ['The sensor-data is not valid'];
       }
   }
 
@@ -162,7 +159,7 @@ class Sensors {
     var mode=0;
     let noArgs=[];
     var defaultArr=[];
-    var nextIndex=0;
+    //var nextIndex=0;
     this.senType.sort((a, b) => (a.id > b.id) ? 1 : -1)
 
     /**********Default=5******* */
@@ -188,12 +185,13 @@ class Sensors {
     // }
     
     /**************QUANTITY*************** */
-    console.log(info);
+    
     if(info.quantity){
+      console.log("IFFFFFF");
     for(var i=0;i<this.senType.length;i++){
       if(this.senType[i].quantity===info.quantity){
-        nextIndex=-1;
-        this.noArgs.push(this.senType[i]);
+        this.nextIndex=-1;
+        noArgs.push(this.senType[i]);
         // data=defaultArr.push(this.senType[i]);
         
       }
@@ -208,33 +206,37 @@ class Sensors {
     
     /***************NextIndex************/
    else if(info.index && info.count){
+    //console.log("IFFFFFF/ELSEEEEE");
     var index=Number(info.index);
     var count=Number(info.count);
     var len = index+count;
+    //console.log(index + " "+ count+ " "+ len );
     //console.log(nextIndex);
-    for(var i=info.index;i<len;i++){
+    for(var i=index;i<len;i++){
       //console.log(this.senType[i]);
-      this.noArgs.push(this.senType[i]);
+      noArgs.push(this.senType[i]);
     }
-    nextIndex=this.noArgs.length;
+    this.nextIndex=+i;
   }
   // nextIndex=noArgs.length;
 
-  else{
+  else {
+    //console.log("elseeeeee");
     var def=DEFAULT_COUNT;
     //if(nextIndex>=0){
-    for(var i=0;i<def;i++){
-      // console.log(this.senType[i]);
-      this.noArgs.push(this.senType[i]);
+    //for(var j=0;j<this.senType.length;j++){
+      //if(this.senType[j] === info.id){
+        for(var i=0;i<def;i++){
+            noArgs.push(this.senType[i]);
     }
-     nextIndex=this.noArgs.length;
+     this.nextIndex=noArgs.length;
+  
+  // else{
+  //   throw [' cannot find sensor-type id'];
+  // }
+  // }
   }
-
-  
-    //console.log(info);
-   
-  
-    return {nextIndex:nextIndex,data:this.noArgs};
+    return {nextIndex:this.nextIndex,data:noArgs};
   }
   
   /** Subject to validation of search-parameters in info as per
@@ -266,64 +268,82 @@ class Sensors {
     const searchSpecs = validate('findSensors', info);
     //@TODO
     var sensorArr=[];
-    var auxSen=[]
-    var nextIndex=1;
+    var auxSen=[];
+    var index=0;
+    var cn=DEFAULT_COUNT;
+    //var nextIndex=1;
     this.sen.sort((a, b) => (a.id > b.id) ? 1 : -1)
+    if(info.count) {
+    
+    //   index=info.index;
+      cn=info.count;
+    }
+    if(info.index){
+      index=info.index;
+    }
     
 
     /**************************************/
-    if(info.model && info.count){
-    let c=[];
+    if(info.model){
+    var mode=0;
     //console.log(info.count);
-    for(var i=0; i<this.sen.length;i++){
+    for(var i=index; i<this.sen.length;i++){
       
-      if(this.sen[i].model===info.model){
+      if(this.sen[i].model===info.model && mode<cn){
           //c++;
           //console.log(c);
       
           //console.log(this.sen[i]);
-          auxSen.push(this.sen[i]);
+          sensorArr.push(this.sen[i]);
+          mode++;
+          this.indexSensor=+i+1;
       }
     }
-        //   if(c===info.count){
-        //     break;
-        //   }
-        //   else
-        //   {
-        //     c++;
-        //     console.log(c);
-        //   }
-        //   console.log(this.sen[i]);
+    var sensorArrayTemp=[];
+    sensorArrayTemp.push(this.auxData);
+    for(var p=0;p< sensorArrayTemp.length;p++){}
+    for(var counter=0;counter<info.count;counter++){
+      //console.log(Number(counter)+Number(sensorArr.length));
+      sensorArrayTemp.push(auxSen[counter]);
+    }
+    
+  }
+        
+        // for(var counter=0;counter<info.count;counter++){
+        //   //console.log(Number(counter)+Number(sensorArr.length));
+        //   sensorArr.push(auxSen[counter]);
         // }
-        for(var counter=0;counter<info.count;counter++){
-          //console.log(Number(counter)+Number(sensorArr.length));
-          this.sensorArr.push(auxSen[counter]);
-        }
-        nextIndex=this.sensorArr.length;
-      }
-      else if(info.model && info.count && info.index){
-        for(var i=o;i<this.sen.length;i++){
-          if(this.sen[i]===info.model){
-            this.sensorArr.push(this.sen[i]);
+        // this.nextIndex=this.sensorArr.length;
+      
+      // else if(info.model && info.count && info.index){
+      //   for(var i=o;i<this.sen.length;i++){
+      //     if(this.sen[i]===info.model){
+      //       sensorArr.push(this.sen[i]);
 
-          }
-        }
-      }
+      //     }
+      //   }
+      // }
       
       else {
         /**********Default=5******* */
-    var def=DEFAULT_COUNT;
+    //var def=DEFAULT_COUNT;
     
-    
-    for(var i=0;i<def;i++){
-      //console.log(this.sen[i]);
-      this.sensorArr.push(this.sen[i]);
-    }
-    nextIndex=this.sensorArr.length;
+    // for(var j=0; j<this.sen.length;j++){
+    //   if(this.sen[j].id === info.id){
+        for(var i=index;i<cn;i++){
+            sensorArr.push(this.sen[i]);
+            this.indexSensor = +i+1;
 
       }
+        //this.nextIndex=sensorArr.length;
+  // }
+  //   else{
+  //     throw ['cannot find sensor for id'];
+  //   }
+  //   }
+  }
     //console.log(this.sen);
-    return {nextIndex:nextIndex,data:this.sensorArr};
+    return {nextIndex:this.indexSensor,data:sensorArr};
   }
   
   /** Subject to validation of search-parameters in info as per
@@ -366,6 +386,7 @@ class Sensors {
     //@TODO
     this.senData.sort((a, b) => (a.timestamp > b.timestamp) ? -1 : 1)
     /******************************************************************* */
+    
     var auxData=[];
     //console.log(this.senData);
     for(var i=0; i<this.senData.length;i++){
@@ -399,74 +420,133 @@ class Sensors {
     //console.log(limitRange);
 
     function inRange(values,exp,lim) {
+      let dataCopy = [];
       for (var i = 0; i<values.length; i++) {
         //console.log(values[i]);
         if(parseFloat(values[i].value)>parseFloat(exp.min) && parseFloat(values[i].value)<parseFloat(exp.max) && parseFloat(values[i].value)>parseFloat(lim.min) && parseFloat(values[i].value)<parseFloat(lim.max)){
           //console.log(values[i].value);
-          values[i].status= 'ok';
-          delete values[i].sensorId;
+          dataCopy.push({timestamp: values[i].timestamp,
+                         value: values[i].value,
+                          status: 'ok'}); 
         }
         else if ((parseFloat(values[i].value) > parseFloat(lim.min) && parseFloat(values[i].value) < parseFloat(exp.min)) || (parseFloat(values[i].value) > parseFloat(exp.max) && parseFloat(values[i].value) < parseFloat(lim.max))){
           //console.log(values[i].value);
-          values[i].status = 'outOfRange';
-          delete values[i].sensorId;
+          dataCopy.push({timestamp: values[i].timestamp,
+            value: values[i].value,
+             status: 'outOfRange'});
         }
         else{
           //console.log(values[i].value);
-          values[i].status = 'error';
-          delete values[i].sensorId;
+          dataCopy.push({timestamp: values[i].timestamp,
+            value: values[i].value,
+             status: 'error'});
        }
      } 
+     return dataCopy;
    }
     
-    inRange(auxData,expectedRange,limitRange);
+    var datacopy = inRange(auxData,expectedRange,limitRange);
 
-    let auxDataCount = [];
+    function count (data, count) {
+      let auxDataCount = [];
 
-    for (var i = 0; i < info.count; i++) {
-      auxDataCount.push(auxData[i]);
+    for (var i = 0; i < count; i++) {
+      auxDataCount.push(data[i]);
 
     }
+    
+    return auxDataCount;
+    }
+    if(info.count){
+      var res = count(datacopy, info.count);
+    }
+
+    if(info.sensorId && (!info.statuses) && info.count && (!info.timestamp) && (!info.doDetail)){
+        return {data: res};
+      
+  }
+
 
     //console.log(auxData);
-    console.log(auxDataCount);
+    //console.log(auxDataCount);
 /************************************************************* */
-    let details = {};
-    if (info.doDetail) {
-      details.data = auxDataCount;
+    else if (info.sensorId && (!info.statuses) && info.count && (!info.timestamp) && info.doDetail){
+      let details = {};
+      if (info.doDetail) {
+      details.data = res;
       details.sensorType = this.senType[senTypeIndex];
       details.sensor = this.sen[senIndex];
+      }
+      return details;
     }
+    //console.log(details);
+/****************************************************************/
 
-    console.log(details);
-/******************************************************88 */
+else if ((info.sensorId && info.statuses && info.count && (!info.timestamp) && (!info.doDetail)) || (info.sensorId && info.statuses && info.count && info.timestamp && (!info.doDetail))) {
     let curStatus = {};
     let ar=[];
     //console.log(typeof(info.statuses));
-    console.log(info.statuses);
+    //console.log(info.statuses);
     if (info.statuses) {
+      let choice1;
+      let choice2;;
+      if(info.statuses.includes('|')){                 
+       choice1 = info.statuses.split('|')[0];
+      choice2 = info.statuses.split('|')[1];
+ }    else{
+     choice1 = info.statuses;
+ }
       for (var i = 0; i < auxData.length; i++) {
-        if(auxData[i].status===info.statuses)
+        if(datacopy[i].status===choice1 || datacopy[i].status===choice2)
         {
-          ar.push(auxData[i]);
+          ar.push(datacopy[i]);
         }
       }
         //console.log(ar);
         // if (auxData[i].status === info.statuses) {
         //   curStatus.data = auxData[i];
         let arr = [];
-        for(var i=0;i<info.count;i++){
-          //console.log(i);
-          arr.push(ar[i]);
-          //console.log(curStatus);
+        for(var i=0;i<ar.length;i++){
 
+          if (info.timestamp) {
+            if(ar[i].timestamp <= info.timestamp) {
+              arr.push(ar[i]);
+            }
+          }
+          //console.log(i);
+          //console.log(curStatus);
         }
-        curStatus.data = arr;
-        console.log(curStatus);
+        var arrTemp = [];
+        var arTemp = [];
+        //console.log(info.count);
+        for(var i = 0; i < info.count; i++) {
+          if(info.timestamp) {
+            arrTemp.push(arr[i]);
+          }
+          else{
+            arTemp.push(ar[i]);
+          }
+        }
+        // console.log(arrTemp);
+        // console.log(arTemp);
+
+        if(info.timestamp) {
+          curStatus.data = arrTemp; 
+        } else {
+          curStatus.data = arTemp;
+        }
+        //console.log(arr);
+        //curStatus.data = arr;
+        //console.log(curStatus);
         
     }
+    return curStatus;
+  }
     
+    // timeStampArr = []
+    // if(info.timestamp) {
 
+    // }
     
     /**************************************************** */
     
@@ -512,9 +592,6 @@ class Sensors {
     //     }
     //    }
        
-
-    
-    return {};
   }
   
   
