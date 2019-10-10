@@ -15,7 +15,42 @@ class Sensors {
    */
   static async newSensors(mongoDbUrl) {
     //@TODO
-    return new Sensors();    
+    //const url=mongoDbUrl;
+    console.log(mongoDbUrl);
+    const url =  mongoDbUrl.match(/(\w+):\/\/([^/]+)\/(.*)/);
+    if (!url) {
+      throw [ `Incorrect format of URL` ];
+    }
+    
+   // const m = url.match(/(\w+)(.*):(\d*)\/?(.*)/);
+   // const m=url.match(/(^mongodb):\/\/([A-Za-z0-9\.-]{3,}(?:\:\d+))\/(.*)/);
+    let [full,name,port,db]=url;
+    // console.log(full);
+    // console.log(name);
+    // console.log(port);
+    // console.log(db);
+    
+    if(name!=="mongodb"){
+      throw [ `invalid name` ];
+    }
+    let dbName=db;
+    console.log(dbName);
+    // const client=new MongoClient(url,MONGO_OPTIONS);
+    // client.connect(function(err)){
+    //   assert.equal(null,err);
+    //   console.log("Successfully connected");
+    // });
+    //const client=await mongo.connect(mongoDbUrl,MONGO_OPTIONS);
+    console.log("Successfully connected");
+    //mongo.close();
+    
+  
+    
+    return new Sensors(dbName);    
+  }
+
+  constructor(dbName){
+    this.dbName=dbName;
   }
 
   /** Release all resources held by this Sensors instance.
@@ -23,6 +58,7 @@ class Sensors {
    */
   async close() {
     //@TODO
+   // await this.client.close();
   }
 
   /** Clear database */
