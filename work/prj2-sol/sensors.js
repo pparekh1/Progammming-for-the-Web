@@ -8,7 +8,14 @@ const mongo = require('mongodb').MongoClient;
 
 class Sensors {
 
-
+    constructor(client,database){
+    this.client=client;
+    this.database=database;
+    for (const [k, v] of Object.entries(COLLECTIONS)) {
+      this[k] = this.database.collection(v);
+    }
+    
+  }
   /** Return a new instance of this class with database as
    *  per mongoDbUrl.  Note that mongoDbUrl is expected to
    *  be of the form mongodb://HOST:PORT/DB.
@@ -22,48 +29,49 @@ class Sensors {
       throw [ `Incorrect format of URL` ];
     }
     
+    else{
    // const m = url.match(/(\w+)(.*):(\d*)\/?(.*)/);
    // const m=url.match(/(^mongodb):\/\/([A-Za-z0-9\.-]{3,}(?:\:\d+))\/(.*)/);
-    let [full,name,port,db]=url;
+    var [full,name,port,dbName]=url;
     // console.log(full);
     // console.log(name);
     // console.log(port);
     // console.log(db);
+    var db1=dbName;
+    var mongoUrl = `mongodb://${port}`;
+    console.log(mongoUrl);
     
-    if(name!=="mongodb"){
-      throw [ `invalid name` ];
     }
-    let dbName=db;
-    console.log(dbName);
-    // const client=new MongoClient(url,MONGO_OPTIONS);
-    // client.connect(function(err)){
-    //   assert.equal(null,err);
-    //   console.log("Successfully connected");
-    // });
-    //const client=await mongo.connect(mongoDbUrl,MONGO_OPTIONS);
-    console.log("Successfully connected");
-    //mongo.close();
+    // if(name!=="mongodb"){
+    //   throw [ `invalid name` ];
+    // }
+    //let dbName=db;
+    //console.log(dbName);
     
+    const client= await mongo.connect(mongoUrl,MONGO_OPTIONS);
+   
+    const database = client.db(db1);
+    //console.log("Successfully connected");
+    //console.log(database);
   
-    
-    return new Sensors(dbName);    
+  
+    return new Sensors(client,database);    
   }
 
-  constructor(dbName){
-    this.dbName=dbName;
-  }
+  
 
   /** Release all resources held by this Sensors instance.
    *  Specifically, close any database connections.
    */
   async close() {
     //@TODO
-   // await this.client.close();
+    await this.client.close();
   }
 
   /** Clear database */
   async clear() {
     //@TODO
+    await this.database.dropDatabase();
   }
 
   /** Subject to field validation as per validate('addSensorType',
@@ -75,8 +83,45 @@ class Sensors {
   async addSensorType(info) {
     const sensorType = validate('addSensorType', info);
     //@TODO
-  }
-  
+   // console.log(sensorType.id);
+  //  var senType=[];
+   //var mode=0;
+    
+  //   console.log("inside add sensor types");
+  //  // var col=senType.push(await this.database.collection("sensorTypes").find().toArray());
+  //   //console.log(col);
+    // for(var i in await this.database.collection("sensorTypes").find().toArray()){
+    //   if(sensorType.id){
+    //     mode=1;
+    //   }
+    // }
+    // if(mode===1){
+    //   const err = `Already present`;
+    // throw [ new AppError('present', err) ];
+
+    // }
+    // else{
+     await this.database.collection("sensorTypes").replaceOne({id:sensorType.id}
+      ,sensorType,{upsert:true});
+    // let test1 = await this.database.collection("sensorTypes").find({id:"ge-t37c"}).toArray();
+    // console.log(test1);
+
+    
+   //  }
+    
+  //   if(sensorType.id===this.database.collection("sensortTypes")){
+  //     const err = `Already present`;
+  //   throw [ new AppError('present', err) ];
+    
+  //   //let ret=await test.insertMany()
+  // }
+  // else{
+  //   let test = await this.database.collection("sensorTypes").insertOne(sensorType);
+  //   let test1 = await this.database.collection("sensorTypes").find({id:"ge-t37c"}).toArray();
+  //   console.log(test1);
+    
+  // }
+}
   /** Subject to field validation as per validate('addSensor', info)
    *  add sensor specified by info to this.  Note that info.model must
    *  specify the id of an existing sensor-type.  Replace any earlier
@@ -84,9 +129,29 @@ class Sensors {
    *
    *  All user errors must be thrown as an array of AppError's.
    */
+
   async addSensor(info) {
     const sensor = validate('addSensor', info);
-    //@TODO
+    //@
+    var mode=0;
+    var senType;
+    senType=await this.database.collection("sensorTypes").find().toArray();
+    console.log(senType);
+    for(var i of senType){
+      if(i.id===sensor.model){
+        mode=1;
+      }
+    }
+    if(mode===1){
+      await this.database.collection("sensors").insertOne(sensor);
+
+    }
+    else{
+      const err = `Already present`;
+    throw [ new AppError('present', err) ];
+    }
+
+
   }
 
   /** Subject to field validation as per validate('addSensorData',
@@ -100,6 +165,22 @@ class Sensors {
   async addSensorData(info) {
     const sensorData = validate('addSensorData', info);
     //@TODO
+    var mode=0;
+    var sen;
+    sen=await this.database.collection("sensors").find().toArray();
+    for(var i of sen){
+      if(i.id===sensorData.sensorId){
+        mode=1;
+      }
+    }
+    if(mode===1){
+      await this.database.collection("sensorData").insertOne(sensorData);
+
+    }
+    else{
+      const err = `Already present`;
+    throw [ new AppError('present', err) ];
+    }
   }
 
   /** Subject to validation of search-parameters in info as per
@@ -127,7 +208,44 @@ class Sensors {
   async findSensorTypes(info) {
     //@TODO
     const searchSpecs = validate('findSensorTypes', info);
-    return { data: [], nextIndex: -1 };
+    //this.database.collection("sensorTypes").find().sort({id:1}).toArray;
+   // console.log(searchSpecs.id);
+    var test1;
+    var nextIndex=-1;
+   
+    let type=[];
+    
+  console.log(searchSpecs._index);
+  console.log(searchSpecs._count);
+
+    if(searchSpecs.id){
+      //var test = await this.database.collection("sensorTypes").insertOne(sensorType);
+      test1 = await this.database.collection("sensorTypes").find({id:searchSpecs.id}).sort({id:1}).toArray();
+      type.push(test1);
+   
+    }
+    else if(searchSpecs.manufacturer && searchSpecs.quantity){
+      test1= await this.database.collection("sensorTypes").find({manufacturer:searchSpecs.manufacturer,quantity:searchSpecs.quantity}).sort({id:1}).limit(searchSpecs._count).skip(searchSpecs._index).toArray();
+      type.push(test1);
+      //nextIndex=-1;
+    }    
+    else if(searchSpecs.manufacturer){
+      test1=await this.database.collection("sensorTypes").find({manufacturer:searchSpecs.manufacturer}).sort({id:1}).limit(searchSpecs._count).skip(searchSpecs._index).toArray();
+      type.push(test1);
+ }
+
+//console.log(type);
+for(let i=0;i<test1.length;i++){
+  delete test1[i]['_id'];
+}
+if(searchSpecs._index!==0 &&searchSpecs._count!==5){
+  nextIndex= searchSpecs._index+searchSpecs._count;
+}
+
+
+
+    //console.log(test1);
+    return { data:[type], nextIndex };
   }
   
   /** Subject to validation of search-parameters in info as per
@@ -158,7 +276,28 @@ class Sensors {
   async findSensors(info) {
     //@TODO
     const searchSpecs = validate('findSensors', info);
-    return { data: [], nextIndex: -1 };
+    var test1;
+    var s=[];
+    var nextIndex;
+    var len;
+    len=await this.database.collection("sensors").find({model:searchSpecs.model}).sort({id:1}).toArray()
+    console.log(len.length);
+
+    if(searchSpecs.model){
+      test1=(await this.database.collection("sensors").find({model:searchSpecs.model}).sort({id:1}).limit(searchSpecs._count).skip(searchSpecs._index).toArray());
+      console.log(typeof(test1));
+      s.push(test1);
+      nextIndex=test1.length+searchSpecs._index;
+
+    }
+    // else if(searchSpecs.model && searchSpecs._index && searchSpecs._count){
+    //   test1=(await this.database.collection("sensors").find({model:searchSpecs.model}).sort({id:1}).limit(searchSpecs._count).toArray());
+    //   s.push(test1);
+    //   console.log(s.length);
+    //   nextIndex=len.length+searchSpecs._index;
+
+    // }
+    return { data: s, nextIndex };
   }
   
   /** Subject to validation of search-parameters in info as per
@@ -201,12 +340,236 @@ class Sensors {
   async findSensorData(info) {
     //@TODO
     const searchSpecs = validate('findSensorData', info);
-    return { data: [], };
+    var auxData=[];
+    var senDataC;
+    var senDataId;
+    var senTypeC;
+    var sensorC;
+    
+    
+    senDataC=await this.database.collection("sensorData")
+                .find().sort({a:1}).toArray();
+    senTypeC=await this.database.collection("sensorTypes").find()
+                .sort({a:1}).toArray();  
+    sensorC=await this.database.collection("sensors").find()
+                  .sort({a:1}).toArray();
+    //console.log(senC);
+    senDataId=await this.database.collection("sensorData").find({sensorId:searchSpecs.sensorId}).sort({id:1}).toArray();
+    console.log(senDataId[0]);
+    // for(var i in senDataC){
+    //   if(i.sensorId===searchSpecs.sensorId){
+        
+    var auxId=senDataId[0].sensorId;
+    //console.log(auxId);
+    
+    for(var i=0;i<sensorC.length;i++){
+      
+      if(sensorC[i].id===auxId){
+      
+        var sensorIndex=i;
+        var expectedRange=sensorC[i].expected;
+        var model=sensorC[i].model;
+      }
+    }
+    // console.log(expectedRange);
+    // console.log(model);
+
+    for(var i = 0; i < senTypeC.length; i++) {
+      if (senTypeC[i].id === model) {
+        var senTypeIndex = i;
+        var limitRange = senTypeC[i].limits;
+      }
+    }
+    //console.log(limitRange);
+
+    function inRange(values,exp,lim) {
+      let dataCopy = [];
+      for (var i = 0; i<values.length; i++) {
+        //console.log(values[i]);
+        if(parseFloat(values[i].value)>parseFloat(exp.min) && parseFloat(values[i].value)<parseFloat(exp.max) && parseFloat(values[i].value)>parseFloat(lim.min) && parseFloat(values[i].value)<parseFloat(lim.max)){
+          //console.log(values[i].value);
+          dataCopy.push({timestamp: values[i].timestamp,
+                         value: values[i].value,
+                          status: 'ok'}); 
+        }
+        else if ((parseFloat(values[i].value) > parseFloat(lim.min) && parseFloat(values[i].value) < parseFloat(exp.min)) || (parseFloat(values[i].value) > parseFloat(exp.max) && parseFloat(values[i].value) < parseFloat(lim.max))){
+          //console.log(values[i].value);
+          dataCopy.push({timestamp: values[i].timestamp,
+            value: values[i].value,
+             status: 'outOfRange'});
+        }
+        else{
+          //console.log(values[i].value);
+          dataCopy.push({timestamp: values[i].timestamp,
+            value: values[i].value,
+             status: 'error'});
+       }
+     } 
+     return dataCopy;
+   }
+
+   var datacopy = inRange(senDataId,expectedRange,limitRange);
+   
+   //console.log(datacopy);
+
+   function count (data, count) {
+    let auxDataCount = [];
+
+    for (var i = 0; i < count; i++) {
+    auxDataCount.push(data[i]);
+    }
+
+    //console.log(auxDataCount);
+    return auxDataCount;
   }
 
+
+  if(searchSpecs._count){
+    var res = count(datacopy, info._count);
+  }
+
+  var counter=0;
+   if(searchSpecs.sensorId && (!info.statuses) && (!info._count) && (!info.timestamp) && (!info.doDetail)){
+     var helper=[];
+     for(var i=0;i<datacopy.length &&  counter<searchSpecs._count;i++){
+       if(datacopy[i].status==='ok'){
+         helper.push(datacopy[i]);
+         counter++;
+
+       }
+       
+       }
+       console.log("helper");
+       return {data:helper};
+     }
+     
+
+   
+   else if(searchSpecs.sensorId && info.statuses && (!info._count) && (!info.timestamp) && (!info.doDetail))
+   {
+    var helper1=[];
+    for(var i=0;i<datacopy.length &&  counter<searchSpecs._count;i++){
+      //if(datacopy[i].status){
+        helper1.push(datacopy[i]);
+        counter++;
+
+     // }
+      
+      }
+      console.log("helper1");
+
+      return {data:helper1};
+   
   
   
-} //class Sensors
+  
+   }
+   else if(searchSpecs.sensorId && searchSpecs.statuses && searchSpecs._count && searchSpecs.timestamp && (!info.doDetail)){
+     var helper3=[];
+     var counter=0;
+      for(var i=0;i<datacopy.length && counter<searchSpecs._count;i++){
+          if(datacopy[i].timestamp<=searchSpecs.timestamp){
+            helper3.push(datacopy[i]);
+            counter++;
+          }
+        
+
+      }
+      console.log("helper3");
+      return {data:helper3}; 
+   }
+
+
+
+
+    //id,count
+  else if(info.sensorId && (!info.statuses) && info._count && (!info.timestamp) && (!info.doDetail)){
+      return {data: res};
+    
+}
+
+//console.log(auxData);
+//console.log(auxDataCount);
+
+/************************************************************* */
+else if (searchSpecs.sensorId && searchSpecs.statuses && searchSpecs.count && (!searchSpecs.timestamp) && searchSpecs._doDetail){
+  var details = {};
+  if (searchSpecs._doDetail) {
+  details.data = res;
+  details.sensorType = senTypeC[senTypeIndex];
+  details.sensor = sensorC[senIndex];
+  }
+  return details;
+}
+
+
+/****************************************************************/
+
+else if (info.sensorId && info.statuses && info._count && (!info.timestamp) && (!info._doDetail)  || (info.sensorId && info.statuses && info._count && info.timestamp && (!info._doDetail))) 
+{
+
+  console.log("ar contents:");
+  console.log(ar);
+  let curStatus = {};
+  let ar=[];
+  var counter=0;
+
+  if (info.statuses) {
+    let choice1;
+    let choice2;;
+    if(info.statuses.includes('|')){                 
+     choice1 = info.statuses.split('|')[0];
+    choice2 = info.statuses.split('|')[1];
+}    else{
+   choice1 = info.statuses;
+}
+    for (var i = 0; i < senDataId.length; i++) {             //changed   senDataId
+      if(datacopy[i].status===choice1 || datacopy[i].status===choice2)
+      {
+        ar.push(datacopy[i]);
+      
+      }
+    }  
+    let arr=[];
+    for(var i=0;i<ar.length;i++){
+      if(info.timestamp){
+        if(ar[i].timestamp<=info.timestamp){
+          arr.push(ar[i]);
+        }
+      }
+    }
+    var arrTemp=[];
+    var arTemp=[];
+    for(var i=0;i<info.count;i++){
+      if(info.timestamp){
+        arrTemp.push(arr[i]);
+      }
+    
+    else{
+      arTemp.push(ar[i]);
+    }
+  }
+  if(info.timestamp){
+    curStatus.data=arrTemp;
+}  else {
+  curStatus.data=arTemp;
+}
+    
+}   
+ return curStatus;
+ 
+    }
+
+  }
+
+    //return { data: [], };
+  
+}
+  
+  
+
+ //class Sensors
+
 
 module.exports = Sensors.newSensors;
 
@@ -220,3 +583,10 @@ const MONGO_OPTIONS = {
 function inRange(value, range) {
   return Number(range.min) <= value && value <= Number(range.max);
 }
+
+const COLLECTIONS = {
+  sensorTypes: 'sensorTypes',
+  sensors: 'sensors',
+  // sensorData: 'sensorData',
+};
+
