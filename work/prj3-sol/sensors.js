@@ -54,6 +54,7 @@ class Sensors {
   async addSensorType(info) {
     const sensorType = validate('addSensorType', info);
     await this._add(this.sensorTypes, sensorType);
+    
   }
   
   /** Subject to field validation as per validate('addSensor', info)
