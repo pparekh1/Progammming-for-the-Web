@@ -40,12 +40,14 @@ function setupRoutes(app) {
   app.use(bodyParser.json());
   app.get('/sensor-types', getsensortype(app));
   app.get('/sensors', getSensor(app));
-  app.get('/sensor-data', getSensorData(app));
+  //app.get('/sensor-data', getSensorData(app));
   app.get(`${'/sensor-types'}/:id`, getSensorTypeId(app));
   app.get(`${'/sensors'}/:id`, getSensorId(app));
   app.get(`${'/sensor-data'}/:id`, getSensorDataId(app));
+  app.get(`${'/sensor-data'}/:id/:timestamp`, getSensorDataIdTs(app));
   app.post('/sensor-types', postSensorType(app));
   app.post('/sensors', postSensor(app));
+  app.post(`${'/sensor-data'}/:id`, postSensorData(app));
   // app.delete(`${base}/:id`, doDelete(app));
   // app.put(`${base}/:id`, doReplace(app));
   // app.patch(`${base}/:id`, doUpdate(app));
@@ -61,9 +63,22 @@ function getsensortype(app) {
       const results = await app.locals.sensors.findSensorTypes(q);
       //res.append('Location', requestUrl(req) + '/' + q.id);
       results.self = requestUrl(req);
+      //console.log(results);
+      //res.json(results);
+      for(var key of results.data){
+        key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-types/' + key.id;
+      }
+      if(results.nextIndex !== -1){
+        results.next=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-types/' + '?_index=' + results.nextIndex+ '&_count=2';
+      }
+      if(results.previousIndex !== -1 && results.previousIndex !== 0){
+        results.previous=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-types/' + '?_index=' + results.previousIndex + '&_count=2';
+      }
       res.json(results);
     }
     catch (err) {
+     // console.log("errrrrorrrrrrr");
+     // console.log(err);
       const mapped = mapError(err);
       res.status(mapped.status).json(mapped);
     }
@@ -77,6 +92,15 @@ function getSensor(app) {
      try {
        const results = await app.locals.sensors.findSensors(q);
        results.self = requestUrl(req);
+       if(results.nextIndex !== -1){
+        results.next=requestUrl(req) + '&_index=' + results.nextIndex;
+      }
+      // if(results.previousIndex !== -1 && results.previousIndex !== 0){
+      //   results.previous=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensors/' + '?_index=' + results.previousIndex + '&_count=2';
+      // }
+       for(var key of results.data){
+        key.self=key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensors/' + key.id;
+      }
        res.json(results);
      }
      catch (err) {
@@ -86,21 +110,21 @@ function getSensor(app) {
    });
  }
 
- function getSensorData(app) {
-  // console.log(port);
-   return errorWrap(async function(req, res) {
-     const q = req.query || {};
-     try {
-       const results = await app.locals.sensors.findSensorData(q);
-       results.self = requestUrl(req);
-       res.json(results);
-     }
-     catch (err) {
-       const mapped = mapError(err);
-       res.status(mapped.status).json(mapped);
-     }
-   });
- }
+//  function getSensorData(app) {
+//   // console.log(port);
+//    return errorWrap(async function(req, res) {
+//      const q = req.query || {};
+//      try {
+//        const results = await app.locals.sensors.findSensorData(q);
+//        results.self = requestUrl(req);
+//        res.json(results);
+//      }
+//      catch (err) {
+//        const mapped = mapError(err);
+//        res.status(mapped.status).json(mapped);
+//      }
+//    });
+//  }
 
 function getSensorTypeId(app) {
   return errorWrap(async function(req, res) {
@@ -116,11 +140,16 @@ function getSensorTypeId(app) {
       }
       else {
         results.self = requestUrl(req);
+        for(var key of results.data){
+          key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-types/' + key.id;
+        }
   res.json(results);
-  res.append('Location', requestUrl(req) + '/' + id.id);
+  //res.append('Location', requestUrl(req) + '/' + id.id);
       }
     }
     catch(err) {
+      //console.log("errrrorrroror");
+      //console.log(err);
       const mapped = mapError(err);
       res.status(mapped.status).json(mapped);
     }
@@ -132,6 +161,16 @@ function getSensorId(app) {
     try {
       const id = req.params.id;
       const results = await app.locals.sensors.findSensors({ id: id });
+      results.self = requestUrl(req);
+       if(results.nextIndex !== -1){
+        results.next=requestUrl(req) + '&_index=' + results.nextIndex;
+      }
+      // if(results.previousIndex !== -1 && results.previousIndex !== 0){
+      //   results.previous=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensors/' + '?_index=' + results.previousIndex + '&_count=2';
+      // }
+       for(var key of results.data){
+        key.self=key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensors/' + key.id;
+      }
       if (results.length === 0) {
 	throw {
 	  isDomain: true,
@@ -140,8 +179,38 @@ function getSensorId(app) {
 	};
       }
       else {
-        results.self = requestUrl(req);
+        //results.self = requestUrl(req);
 	res.json(results);
+      }
+    }
+    catch(err) {
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function getSensorDataIdTs(app) {
+  return errorWrap(async function(req, res) {
+    try {
+      const id = req.params.id;
+      const timestamp = req.params.timestamp;
+      const results = await app.locals.sensors.findSensorData({ sensorId: id , timestamp:timestamp});
+      results.self = requestUrl(req);
+      for(var key of results.data){
+        key.self=key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-data/' + id + '/' + key.timestamp;
+      }
+    
+      if (results.length === 0) {
+	throw {
+	  isDomain: true,
+	  errorCode: 'NOT_FOUND',
+	  message: `user ${id} not found`,
+	};
+      }
+      else {
+        //results.self = requestUrl(req);
+	res.json(results.data[0]);
       }
     }
     catch(err) {
@@ -155,7 +224,13 @@ function getSensorDataId(app) {
   return errorWrap(async function(req, res) {
     try {
       const id = req.params.id;
-      const results = await app.locals.sensors.findSensorData({ id: id });
+      const timestamp = req.query.timestamp;
+      const statuses = req.query.statuses;
+      const results = await app.locals.sensors.findSensorData({ sensorId: id , timestamp:timestamp , statuses:statuses});
+      for(var key of results.data){
+        key.self=key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-data/' + id + '/' + key.timestamp;
+      }
+    
       if (results.length === 0) {
 	throw {
 	  isDomain: true,
@@ -174,7 +249,6 @@ function getSensorDataId(app) {
     }
   });
 }
-
 
 function postSensorType(app) {
   return errorWrap(async function(req, res) {
@@ -199,6 +273,21 @@ function postSensor(app) {
       const results = await app.locals.sensors.addSensor(obj);
       res.append('Location', requestUrl(req) + '/' + obj.id);
       //results.self = requestUrl(req);
+      res.sendStatus(CREATED);
+    }
+    catch(err) {
+      const mapped = mapError(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function postSensorData(app) {
+  return errorWrap(async function(req, res) {
+    try {
+      const replacement = Object.assign({}, req.body);
+      replacement.sensorId = req.params.id;
+      const results = await app.locals.sensors.addSensorData(replacement);
       res.sendStatus(CREATED);
     }
     catch(err) {
