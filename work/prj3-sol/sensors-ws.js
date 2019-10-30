@@ -15,15 +15,12 @@ function serve(port,sensors) {
   //@TODO set up express app, routing and listen
   const app = express();
   app.locals.port = port;
-  // app.locals.base = base;
-  // app.locals.model = model;
   app.locals.sensors = sensors;
   setupRoutes(app);
   app.listen(port, function() {
     console.log(`listening on port ${port}`);
     console.log(port);
-    //console.log(err);
-    //console.log(mongoDbUrl);
+   
 
   });
 }
@@ -34,13 +31,11 @@ module.exports = { serve : serve};
 //@TODO routing function, handlers, utility functions
 
 function setupRoutes(app) {
- // console.log(port);
-  //const base = app.locals.base;
+
   app.use(cors());
   app.use(bodyParser.json());
   app.get('/sensor-types', getsensortype(app));
   app.get('/sensors', getSensor(app));
-  //app.get('/sensor-data', getSensorData(app));
   app.get(`${'/sensor-types'}/:id`, getSensorTypeId(app));
   app.get(`${'/sensors'}/:id`, getSensorId(app));
   app.get(`${'/sensor-data'}/:id`, getSensorDataId(app));
@@ -48,15 +43,13 @@ function setupRoutes(app) {
   app.post('/sensor-types', postSensorType(app));
   app.post('/sensors', postSensor(app));
   app.post(`${'/sensor-data'}/:id`, postSensorData(app));
-  // app.delete(`${base}/:id`, doDelete(app));
-  // app.put(`${base}/:id`, doReplace(app));
-  // app.patch(`${base}/:id`, doUpdate(app));
+
   app.use(doErrors()); //must be last   
 }
 
 
 function getsensortype(app) {
- //console.log(err);
+
   return errorWrap(async function(req, res) {
     const q = req.query || {};
     try {
@@ -133,6 +126,7 @@ function getSensorTypeId(app) {
       const results = await app.locals.sensors.findSensorTypes({ id: id });
       if (results.length === 0) {
 	throw {
+    
 	  isDomain: true,
 	  errorCode: 'NOT_FOUND',
 	  message: `user ${id} not found`,
@@ -148,9 +142,12 @@ function getSensorTypeId(app) {
       }
     }
     catch(err) {
-      //console.log("errrrorrroror");
-      //console.log(err);
-      const mapped = mapError(err);
+      
+      console.log(err[0]);
+      err[0].isDomain=true;
+      errorCode : 'NOT_FOUND';
+	    message: `user ${id} not found`;
+      const mapped = mapError(err[0]);
       res.status(mapped.status).json(mapped);
     }
   });
@@ -191,27 +188,60 @@ function getSensorId(app) {
 }
 
 function getSensorDataIdTs(app) {
+  var arr=[];
   return errorWrap(async function(req, res) {
     try {
+      console.log("inside try");
       const id = req.params.id;
       const timestamp = req.params.timestamp;
       const results = await app.locals.sensors.findSensorData({ sensorId: id , timestamp:timestamp});
-      results.self = requestUrl(req);
-      for(var key of results.data){
-        key.self=key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-data/' + id + '/' + key.timestamp;
+      //for(var i=0;i<results.data.length;i++){
+        results.self = requestUrl(req);
+        for(var i of results.data) {
+        console.log("first step");
+        console.log(typeof(i.timestamp));
+        console.log(typeof(timestamp));
+        console.log(i);
+        console.log(timestamp);
+        if(i.timestamp===Number(timestamp)){
+          console.log("inside if");
+          arr.push(i);
+          i.self=requestUrl(req);
+
+          res.json({data:i, self :requestUrl(req), nextIndex:-1});
+        }
+        else{
+          if(results.length===0){
+          throw {
+            isDomain: true,
+            errorCode: 'NOT_FOUND',
+            message: `user ${id} not found`,
+          };
+        }
+
+        }
       }
+      
+      //console.log(results);
+      
+      //console.log("between loops");
+      //for(var i in results.data.length) {
+        
+  //     if (results.length === 0) {
+	// throw {
+	//   isDomain: true,
+	//   errorCode: 'NOT_FOUND',
+	//   message: `user ${id} not found`,
+	// };
+  //     }
+  //      else {
+  // //      res.json(results.data[0]);
+  // //     }
+
+
     
-      if (results.length === 0) {
-	throw {
-	  isDomain: true,
-	  errorCode: 'NOT_FOUND',
-	  message: `user ${id} not found`,
-	};
-      }
-      else {
-        //results.self = requestUrl(req);
-	res.json(results.data[0]);
-      }
+
+
     }
     catch(err) {
       const mapped = mapError(err);
@@ -228,7 +258,7 @@ function getSensorDataId(app) {
       const statuses = req.query.statuses;
       const results = await app.locals.sensors.findSensorData({ sensorId: id , timestamp:timestamp , statuses:statuses});
       for(var key of results.data){
-        key.self=key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-data/' + id + '/' + key.timestamp;
+      key.self=req.protocol+'://'+req.hostname+':'+req.app.locals.port+'/sensor-data/' + id + '/' + key.timestamp;
       }
     
       if (results.length === 0) {
@@ -324,7 +354,8 @@ function errorWrap(handler) {
 
 const ERROR_MAP = {
   EXISTS: CONFLICT,
-  NOT_FOUND: NOT_FOUND
+  NOT_FOUND: NOT_FOUND,
+  SERVER_ERROR: NOT_FOUND
 }
 
 /** Map domain/internal errors into suitable HTTP errors.  Return'd
@@ -332,7 +363,7 @@ const ERROR_MAP = {
  *  code.
  */
 function mapError(err) {
-  console.error(err);
+  //console.error(err);
   return err.isDomain
     ? { status: (ERROR_MAP[err.errorCode] || BAD_REQUEST),
 	code: err.errorCode,
