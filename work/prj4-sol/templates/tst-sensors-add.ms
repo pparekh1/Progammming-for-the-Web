@@ -1,34 +1,37 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>User Search</title>
+    <title>Add Sensors</title>
     <link rel="stylesheet" href="{{{base}}}/css/style.css">
   </head>
   <body>
-    <h1>User Search</h1>
+    <h1>Create/Update Sensors</h1>
     <ul>
       {{#errors}}
         <li class="error">{{.}}</li>
       {{/errors}}
     </ul>
-    <form method="GET" action="{{{base}}}/search.html">
-       <p>
-	 Please fill in one or more of the following fields
-        </p>
+    <form method="POST" action="{{{base}}}/tst-sensors-add.html">
+   
 	{{#fields}}
-	  {{#isSearch}}
+  {{#isAddS}}
 	    <label>
-	    <span class="label">{{friendlyName}}:</span>
+	    <span class="label">
+	      {{#isRequiredSensor}}* {{/isRequiredSensor}}{{friendlyName}}
+	    </span>
+      {{#isRequiredSensor}}
 	    <input name="{{name}}" {{#type}}type="{{type}}"{{/type}}
-	           value="{{value}}">
+	           value="{{value}}"> 
+        {{/isRequiredSensor}}     
+      
 	    </label>
 	    <br/>
 	    {{#errorMessage}}
 	      <span class="error">{{errorMessage}}</span><br/>
 	    {{/errorMessage}}
-	  {{/isSearch}}
+      {{/isAddS}}
 	 {{/fields}}
-      <input name="submit" type="submit" value="search" class="control">
+      <input name="submit" type="submit" value="add" class="control">
     </form> 
     {{>footer}}
   </body>

@@ -1,89 +1,63 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Search Sensor Type</title>
+    <title>Search Sensor</title>
     <link rel="stylesheet" href="{{{base}}}/css/style.css">
   </head>
   <body>
-    <h1>Search Sensor Types</h1>
+    <h1>Search Sensor</h1>
     <ul>
       {{#errors}}
         <li class="error">{{.}}</li>
       {{/errors}}
     </ul>
-    <form method="GET" action="{{{base}}}/tst-sensor-types-search.html">
+    <form method="GET" action="{{{base}}}/tst-sensors-search.html">
    
 	{{#fields}}
-  {{#isSearchST}}
+  
+  {{#isSearchS}}
 	    <label>
 	    <span class="label">
-	      {{#isRequired}}{{/isRequired}}{{friendlyName}}:
+	      {{#isRequiredSensor}}{{/isRequiredSensor}}{{friendlyName}}:
 	    </span>
-      {{#isRequired}}
+      {{#isRequiredSensor}}
 	    <input name="{{name}}" {{#type}}type="{{type}}"{{/type}}
 	           value="{{value}}"> 
-        {{/isRequired}}     
-      {{#isSelect}}
- <select name="quantity"
-     id="quantity" class="tst-quantity">
-      <option value="" selected>
-        Select
-      </option>
-      <option value="temperature">
-        Temperature
-      </option>
-      <option value="pressure">
-        Pressure
-      </option>
-      <option value="flow">
-        Flow Rate
-      </option>
-      <option value="humidity">
-        Relative Humidity
-      </option>
-  </select>
-{{/isSelect}}
+        {{/isRequiredSensor}}     
+      
 	    </label>
 	    <br/>
 	    {{#errorMessage}}
 	      <span class="error">{{errorMessage}}</span><br/>
 	    {{/errorMessage}}
-      {{/isSearchST}}
+      {{/isSearchS}}
 	 {{/fields}}
       <input name="submit" type="submit" value="search" class="control">
     </form> 
-    <h2>Results Summary</h2>
+  <h2>Results Summary</h2>
 
-    <table class="summary">
+  <table class="summary">
         <thead>
     	   <tr>
-                  <th>Manufacturer</th>
-                  <th>Sensor Type ID</th>
-                  <th>Model Number</th>
-                  <th>Measure</th>
-                  <th colspan="2">Limits</th>
+                  <th>Sensor ID</th>
+                  <th>Model</th>
+                  <th>Period</th>
+                  <th colspan="2">Expected Range</th>
     	   </tr>
     	   <tr>
-                  <th></th>
                   <th></th>
                   <th></th>
                   <th></th>
                   <th>Min</th>
                   <th>Max</th>
     	   </tr>
-    </thead>
-    <tbody>
-                
-                
-
+         </thead>
+         <tbody>
     {{#users}}
      <tr>
-   
-     
-        {{#fields}}
+   {{#fields}}
 	  {{#value}}
      <td>
-         
           {{value}}
            </td>
 	  {{/value}}
@@ -101,5 +75,7 @@
     <a class="tst-prev" href="?_index&#x3D;5" rel="prev">&lt;&lt;</a>
     <a class="tst-next" href="?_index&#x3D;15" rel="next">&gt;&gt;</a>
     </div>
-   {{>footer}}
+    
+    {{>footer}}
+  
 </html>
