@@ -13,6 +13,16 @@ body {
   background-color: var(--color01);
   max-width: var(--max-width);
 }
+table {
+  border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid #999;
+  padding: 0.5rem;
+  text-align: left;
+}
+
 
 .scroll {
   font-size: 150%;
@@ -56,9 +66,11 @@ h1 {
 
 form {
   display: grid;
-  grid-template-columns: 0.5fr 1fr;
+  grid-template-columns: 2.5fr 2.5fr;
   grid-gap: 2vw;
 }
+
+
 
  /* display: grid does not work with fieldset in chrome;
     see <https://codepen.io/davatron5000/pen/LLdYBm>
@@ -72,9 +84,31 @@ form .interval {
   border: 1px solid black;
 }
 
+/* input[type=text] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+} */
+
 input {
   width: 50%;
+  border: 2px solid wheat;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
+select {
+  width: 50%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 4px;
+  background-color:wheat;
+}
+
+
 
 label {
   font-weight: bold;

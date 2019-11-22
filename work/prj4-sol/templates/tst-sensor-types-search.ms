@@ -4,6 +4,7 @@
     <title>Search Sensor Type</title>
     <link rel="stylesheet" href="{{{base}}}/css/style.css">
   </head>
+  
   <body>
     <h1>Search Sensor Types</h1>
     <ul>
@@ -57,8 +58,9 @@
     <table class="summary">
         <thead>
     	   <tr>
-                  <th>Manufacturer</th>
+                  
                   <th>Sensor Type ID</th>
+                  <th>Manufacturer</th>
                   <th>Model Number</th>
                   <th>Measure</th>
                   <th colspan="2">Limits</th>
@@ -73,33 +75,30 @@
     	   </tr>
     </thead>
     <tbody>
-                
-                
-
     {{#users}}
      <tr>
-   
-     
-        {{#fields}}
+   {{#fields}}
 	  {{#value}}
      <td>
-         
           {{value}}
            </td>
 	  {{/value}}
-	{{/fields}}
-     
+     {{/fields}}
        </tr>
-    {{/users}}
+     {{/users}}
     
      </tbody>
                 
    </table>
   </body>
   
+   
    <div class="scroll">
-    <a class="tst-prev" href="?_index&#x3D;5" rel="prev">&lt;&lt;</a>
-    <a class="tst-next" href="?_index&#x3D;15" rel="next">&gt;&gt;</a>
+    <a  href="">&lt;&lt;</a>
+  {{#shub}}
+    <a  href={{shub}}>&gt;&gt;</a>
+    {{/shub}}
     </div>
+  
    {{>footer}}
 </html>

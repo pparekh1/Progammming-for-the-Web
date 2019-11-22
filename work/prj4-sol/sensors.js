@@ -65,7 +65,7 @@ function getST(app) {
 };
 function getS(app) {
   return async function(req, res) {
-    const model = { base: app.locals.base, fields: FIELDS1 };
+    const model = { base: app.locals.base, fields: FIELDS_S };
     const html = doMustache(app, 'tst-sensors-add', model);
     res.send(html);
   };
@@ -82,11 +82,17 @@ function getS(app) {
 function doSearchST(app) {
   return async function(req, res) {
     const isSubmit = req.query.submit !== undefined;
+    console.log("isSubmit req.query");
+    console.log(isSubmit);
     let users = [];
     let errors = undefined;
     const search = getNonEmptyValues(req.query);
+    console.log("search req.query");
+    console.log(search);
     //if (isSubmit) {
       errors = validate(search);
+      console.log("errors req.query");
+    console.log(errors);
       if (Object.keys(search).length == 0) {
 	const msg = 'at least one search parameter must be specified';
 	errors = Object.assign(errors || {}, { _: msg });
@@ -94,18 +100,24 @@ function doSearchST(app) {
    //   if (!errors) {
      
      
-	const q = querystring.stringify(search);
+  const q = querystring.stringify(search);
+  console.log("q stringify");
+    console.log(q);
+    
 	try {
-    console.log(search);
+    console.log("inside try");
     users = await app.locals.model.list('sensor-types',search);
+    console.log("users req.query");
+    console.log(users);
+    
 
     for(var i=0; i< users.data.length;i++){
       //console.log(users.data.limits.min);
       users.data[i].min=users.data[i].limits.min;
       users.data[i].max=users.data[i].limits.max;
     }
-    console.log("users");
-    console.log(users);
+    console.log("users next after for loop");
+    console.log(users.next);
 	}
 	catch (err) {
           console.error(err);
@@ -120,9 +132,12 @@ function doSearchST(app) {
    // let template;
     // if (users.length > 0) {
     //   template = 'details';
+    users.temp = "http://localhost:2346/tst-sensor-types-search.html?_index="+users.nextIndex;
+    console.log("users after temp");
+    console.log(users);
       const val =
 	users.data.map((u) => ({id: u.id, fields: fieldsWithValues(u)}));
-      model = { base: app.locals.base, users: val ,fields:FIELDS ,next:users.next};
+      model = { base: app.locals.base, users: val ,fields:FIELDS,shub:users.temp};
     // }
     // else {
     //   template =  'search';
@@ -138,15 +153,18 @@ function doSearchS(app) {
     const isSubmit = req.query.submit !== undefined;
     let users = [];
     let errors = undefined;
-    const search = getNonEmptyValues1(req.query);
+    const search = getNonEmptyValuesSensor(req.query);
+   
     //if (isSubmit) {
-      errors = validate1(search);
+      errors = validateSensor(search);
       if (Object.keys(search).length == 0) {
 	const msg = 'at least one search parameter must be specified';
 	errors = Object.assign(errors || {}, { _: msg });
       }
    //   if (!errors) {
-	const q = querystring.stringify(search);
+  const q = querystring.stringify(search);
+  console.log("log for search of sensors");
+  console.log(search);
 	try {
     users = await app.locals.model.list('sensors',search);
     for(var i=0; i< users.data.length;i++){
@@ -169,8 +187,8 @@ function doSearchS(app) {
     // if (users.length > 0) {
     //   template = 'details';
       const val =
-	users.data.map((u) => ({id: u.id, fields: fieldsWithValues1(u)}));
-      model = { base: app.locals.base, users: val ,fields:FIELDS1 };
+	users.data.map((u) => ({id: u.id, fields: fieldsWithValuesSensor(u)}));
+      model = { base: app.locals.base, users: val ,fields:FIELDS_S};
     // }
     // else {
     //   template =  'search';
@@ -229,8 +247,8 @@ function addST(app) {
 
 function addS(app) {
   return async function(req, res) {
-    const user = getNonEmptyValues1(req.body);
-    let errors = validate1(user, ['id']);
+    const user = getNonEmptyValuesSensor(req.body);
+    let errors = validateSensor(user, ['id']);
     const min=user.min;
     const max=user.max;
     user.expected={min,max};
@@ -254,7 +272,7 @@ function addS(app) {
       }
     }
     if (errors) {
-      const model = errorModel1(app, user, errors);
+      const model = errorModelSensor(app, user, errors);
       const html = doMustache(app,'tst-sensors-search', model);
       res.send(html);
     }
@@ -269,15 +287,7 @@ const FIELDS_INFO = {
     isAddST:true,
     isRequired: true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
-  },
-  modelNumber: {
-    friendlyName: 'Model Number',
-    isRequired: true,
-    isAddST:true,
-    isSearchST:true,
-    regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: 'User Id field can only contain alphanumerics, - or _ characters',
   },
   manufacturer: {
     friendlyName: 'Manufacturer',
@@ -285,7 +295,15 @@ const FIELDS_INFO = {
     isAddST:true,
     isSearchST :true,
     regex: /^\w+$/,
-    error: 'Can contain only -, \' ,space or alphabetic characters',
+    error: 'Can contain only \-, \', space or alphabetic characters',
+  },
+  modelNumber: {
+    friendlyName: 'Model Number',
+    isRequired: true,
+    isAddST:true,
+    isSearchST:true,
+    regex: /^\w+$/,
+    error: 'Can contain only \-, \', space or alphanumeric characters.',
   },
   quantity: {
     friendlyName: 'Quantity',
@@ -303,7 +321,7 @@ const FIELDS_INFO = {
     isAddST:true,
     isRequired: true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: 'A number.',
   },
   max: {
     friendlyName: 'Maximum Limit',
@@ -311,17 +329,17 @@ const FIELDS_INFO = {
     isRequired: true,
     isAddST:true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: 'A number.',
   }
 };
-const FIELDS_INFO1 = {
+const FIELDS_INFO_S = {
   id: {
     friendlyName: 'Sensor ID',
     isSearchS: true,
     isAddS:true,
     isRequiredSensor: true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: ' Can only contain alphanumerics, - or _ characters.',
   },
   model: {
     friendlyName: 'Model',
@@ -329,7 +347,7 @@ const FIELDS_INFO1 = {
     isAddS:true,
     isSearchS :true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: ' Can only contain alphanumerics, - or _ characters.',
   },
   period: {
     friendlyName: 'Period',
@@ -337,28 +355,28 @@ const FIELDS_INFO1 = {
     isAddS:true,
     isSearchS :true,
     regex: /^\w+$/,
-    error: 'Can contain only -, \' ,space or alphabetic characters',
+    error: 'Must be an integer.',
   },
   min: {
     friendlyName: 'Minimum Limit',
     isRequiredSensor: true,
     isAddS:true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: 'A number.',
   },
   max: {
     friendlyName: 'Maximum Limit',
     isAddS:true,
     isRequiredSensor: true,
     regex: /^\w+$/,
-    error: 'User Id field can only contain alphanumerics or _',
+    error: 'A number.',
   }
 };
 const FIELDS =
   Object.keys(FIELDS_INFO).map((n) => Object.assign({name: n}, FIELDS_INFO[n]));
 
-const FIELDS1 =
-  Object.keys(FIELDS_INFO1).map((n) => Object.assign({name: n}, FIELDS_INFO1[n]));
+const FIELDS_S =
+  Object.keys(FIELDS_INFO_S).map((n) => Object.assign({name: n}, FIELDS_INFO_S[n]));
 
 
 /************************** Field Utilities ****************************/
@@ -373,8 +391,8 @@ function fieldsWithValues(values, errors={}) {
   });
 }
 
-function fieldsWithValues1(values, errors={}) {
-  return FIELDS1.map(function (info) {
+function fieldsWithValuesSensor(values, errors={}) {
+  return FIELDS_S.map(function (info) {
     const name = info.name;
     const extraInfo = { value: values[name] };
     if (errors[name]) extraInfo.errorMessage = errors[name];
@@ -403,16 +421,16 @@ function validate(values, requires=[]) {
   return Object.keys(errors).length > 0 && errors;
 }
 
-function validate1(values, requires=[]) {
+function validateSensor(values, requires=[]) {
   const errors = {};
   requires.forEach(function (name) {
     if (values[name] === undefined) {
       errors[name] =
-	`A value for '${FIELDS_INFO1[name].friendlyName}' must be provided`;
+	`A value for '${FIELDS_INFO_S[name].friendlyName}' must be provided`;
     }
   });
   for (const name of Object.keys(values)) {
-    const fieldInfo1 = FIELDS_INFO1[name];
+    const fieldInfo1 = FIELDS_INFO_S[name];
     const value = values[name];
     if (fieldInfo1.regex && !value.match(fieldInfo1.regex)) {
       errors[name] = fieldInfo1.error;
@@ -432,15 +450,15 @@ function getNonEmptyValues(values) {
   return out;
 }
 
-function getNonEmptyValues1(values) {
-  const out1 = {};
+function getNonEmptyValuesSensor(values) {
+  const out = {};
   Object.keys(values).forEach(function(k) {
-    if (FIELDS_INFO1[k] !== undefined) {
+    if (FIELDS_INFO_S[k] !== undefined) {
       const v = values[k];
-      if (v && v.trim().length > 0) out1[k] = v.trim();
+      if (v && v.trim().length > 0) out[k] = v.trim();
     }
   });
-  return out1;
+  return out;
 }
 
 /** Return a model suitable for mixing into a template */
@@ -452,11 +470,11 @@ function errorModel(app, values={}, errors={}) {
   };
 }
 
-function errorModel1(app, values={}, errors={}) {
+function errorModelSensor(app, values={}, errors={}) {
   return {
     base: app.locals.base,
     errors: errors._,
-    fields: fieldsWithValues1(values, errors)
+    fields: fieldsWithValuesSensor(values, errors)
   };
 }
 
@@ -478,15 +496,15 @@ function doMustache(app, templateId, view) {
   return mustache.render(app.templates[templateId], view, templates);
 }
 
-function errorPage(app, errors, res) {
-  if (!Array.isArray(errors)) errors = [ errors ];
-  const html = doMustache(app, 'errors', { errors: errors });
-  res.send(html);
-}
+// function errorPage(app, errors, res) {
+//   if (!Array.isArray(errors)) errors = [ errors ];
+//   const html = doMustache(app, 'errors', { errors: errors });
+//   res.send(html);
+// }
 
-function isNonEmpty(v) {
-  return (v !== undefined) && v.trim().length > 0;
-}
+// function isNonEmpty(v) {
+//   return (v !== undefined) && v.trim().length > 0;
+// }
 
 function setupTemplates(app) {
   app.templates = {};
