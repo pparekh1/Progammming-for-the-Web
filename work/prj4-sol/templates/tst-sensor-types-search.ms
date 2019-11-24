@@ -12,6 +12,9 @@
         <li class="error">{{.}}</li>
       {{/errors}}
     </ul>
+    {{#err}}
+    <h4 class="zero" font color="red">*No Results found!</h4>
+	   {{/err}}
     <form method="GET" action="{{{base}}}/tst-sensor-types-search.html">
    
 	{{#fields}}
@@ -25,7 +28,7 @@
 	           value="{{value}}"> 
         {{/isRequired}}     
       {{#isSelect}}
- <select name="quantity"
+  <select name="quantity"
      id="quantity" class="tst-quantity">
       <option value="" selected>
         Select
@@ -46,11 +49,9 @@
 {{/isSelect}}
 	    </label>
 	    <br/>
-	    {{#errorMessage}}
-	      <span class="error">{{errorMessage}}</span><br/>
-	    {{/errorMessage}}
-      {{/isSearchST}}
+     {{/isSearchST}}
 	 {{/fields}}
+    
       <input name="submit" type="submit" value="search" class="control">
     </form> 
     <h2>Results Summary</h2>
@@ -94,11 +95,16 @@
   
    
    <div class="scroll">
-    <a  href="">&lt;&lt;</a>
-  {{#shub}}
-    <a  href={{shub}}>&gt;&gt;</a>
-    {{/shub}}
+  {{#prev}}
+    <a  href="{{prev}}"rel="prev">&lt;&lt;</a>
+  {{/prev}}
+  {{#next}}
+    <a  href="{{next}}"rel="next">&gt;&gt;</a>
+  {{/next}}
+   
     </div>
+    
+
   
    {{>footer}}
 </html>

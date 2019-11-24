@@ -114,6 +114,13 @@ label {
   font-weight: bold;
   text-align: right;
 }
+zero {
+  font-weight: bold;
+  text-align: center;
+  color: red;
+
+
+}
 
 
 .error {

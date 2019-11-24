@@ -17,14 +17,14 @@
   {{#isAddST}}
 	    <label>
 	    <span class="label">
-	      {{#isRequired}}* {{/isRequired}}{{friendlyName}}
+	     {{friendlyName}}{{#isRequired}}* {{/isRequired}}
 	    </span>
       {{#isRequired}}
 	    <input name="{{name}}" {{#type}}type="{{type}}"{{/type}}
 	           value="{{value}}"> 
         {{/isRequired}}     
       {{#isSelect}}
- <select name="quantity"
+  * <select name="quantity"
      id="quantity" class="tst-quantity">
       <option value="" selected>
         Select

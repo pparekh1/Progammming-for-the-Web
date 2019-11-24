@@ -27,6 +27,7 @@ const axios = require('axios');
 
 function SensorsWs(baseUrl) {
   this.baseUrl = baseUrl;
+  console.log(baseUrl);
 }
 
 module.exports = SensorsWs;

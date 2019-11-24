@@ -37,7 +37,6 @@ const URLS = {
   sensorTypeSearch: `/tst-sensor-types-search.html`,
   sensorAdd: `/tst-sensors-add.html`,
   sensorSearch: `/tst-sensors-search.html`,
- 
 };
 
 
@@ -47,11 +46,9 @@ function setupRoutes(app) {
   app.get(URLS.sensorTypeAdd, getST(app));
   app.post(URLS.sensorTypeAdd, bodyParser.urlencoded({extended: false}),
      addST(app));
- // app.get(URLS.sensorTypeSearch, getSTSearch(app));
- app.get(URLS.sensorTypeSearch, doSearchST(app));
- app.get(URLS.sensorSearch, doSearchS(app));
-
- app.get(URLS.sensorAdd, getS(app));
+  app.get(URLS.sensorTypeSearch, doSearchST(app));
+  app.get(URLS.sensorSearch, doSearchS(app));
+  app.get(URLS.sensorAdd, getS(app));
   app.post(URLS.sensorAdd, bodyParser.urlencoded({extended: false}),
      addS(app));
  
@@ -71,100 +68,89 @@ function getS(app) {
   };
 };
 
-// function getSTSearch(app) {
-//   return async function(req, res) {
-//     const model = { base: app.locals.base, fields: FIELDS };
-//     const html = doMustache(app, 'tst-sensor-types-search', model);
-//     res.send(html);
-//   };
-// };
-
 function doSearchST(app) {
   return async function(req, res) {
-    const isSubmit = req.query.submit !== undefined;
-    console.log("isSubmit req.query");
-    console.log(isSubmit);
     let users = [];
     let errors = undefined;
     const search = getNonEmptyValues(req.query);
-    console.log("search req.query");
-    console.log(search);
-    //if (isSubmit) {
+    //console.log("search req.query");
+    //console.log(search);
       errors = validate(search);
-      console.log("errors req.query");
-    console.log(errors);
+      //console.log("errors req.query");
+    //console.log(errors);
       if (Object.keys(search).length == 0) {
 	const msg = 'at least one search parameter must be specified';
-	errors = Object.assign(errors || {}, { _: msg });
       }
-   //   if (!errors) {
-     
-     
+  
   const q = querystring.stringify(search);
-  console.log("q stringify");
-    console.log(q);
-    
-	try {
-    console.log("inside try");
+  //console.log("q stringify");
+    //console.log(q);
+  try {
+    //console.log("inside try");
     users = await app.locals.model.list('sensor-types',search);
-    console.log("users req.query");
-    console.log(users);
-    
-
+    //console.log("users req.query");
+    //console.log(users);
     for(var i=0; i< users.data.length;i++){
       //console.log(users.data.limits.min);
       users.data[i].min=users.data[i].limits.min;
       users.data[i].max=users.data[i].limits.max;
     }
-    console.log("users next after for loop");
-    console.log(users.next);
-	}
-	catch (err) {
-          console.error(err);
+  }
+ 	catch (err) {
+    console.error(err);
 	  errors = wsErrors(err);
-	}
-	if (users.length === 0) {
-	  errors = {_: 'no users found for specified criteria; please retry'};
-	}
-     // }
-   // }
+  }
   let model;
-   // let template;
-    // if (users.length > 0) {
-    //   template = 'details';
-    users.temp = "http://localhost:2346/tst-sensor-types-search.html?_index="+users.nextIndex;
-    console.log("users after temp");
-    console.log(users);
-      const val =
-	users.data.map((u) => ({id: u.id, fields: fieldsWithValues(u)}));
-      model = { base: app.locals.base, users: val ,fields:FIELDS,shub:users.temp};
-    // }
-    // else {
-    //   template =  'search';
-    //   model = errorModel(app, search, errors);
-    // }
+
+   if(errors){
+     
+     model = { base: app.locals.base, err: errors ,fields:FIELDS};
+   }
+
+   else{
+        const val =
+   users.data.map((u) => ({id: u.id, fields: fieldsWithValues(u)}));
+  
+   let n="";
+   let p="";
+   let n1;
+   let p1;
+   if(users.next){
+
+  n=users.next.split('?')[1];
+    n1="?"+n;
+   }
+   if(users.prev){
+    p=users.prev.split('?')[1];
+    p1="?"+p;
+  }
+  model = { base: app.locals.base,users:val,fields:FIELDS,next:n1,prev:p1};
+}
+  
+  //console.log(baseUrl);
+  //   users.temp = "http://localhost:2346/tst-sensor-types-search.html?"+q+'&_index='+users.nextIndex;
+  //   //users.temp=q+'&_index='+users.nextIndex;
+ 
     const html = doMustache(app, 'tst-sensor-types-search', model);
     res.send(html);
   };
 };
 
+
 function doSearchS(app) {
   return async function(req, res) {
-    const isSubmit = req.query.submit !== undefined;
     let users = [];
     let errors = undefined;
     const search = getNonEmptyValuesSensor(req.query);
-   
-    //if (isSubmit) {
+ 
       errors = validateSensor(search);
       if (Object.keys(search).length == 0) {
 	const msg = 'at least one search parameter must be specified';
-	errors = Object.assign(errors || {}, { _: msg });
       }
-   //   if (!errors) {
+
   const q = querystring.stringify(search);
-  console.log("log for search of sensors");
-  console.log(search);
+  //console.log("log for search of sensors");
+  //console.log(search);
 	try {
     users = await app.locals.model.list('sensors',search);
     for(var i=0; i< users.data.length;i++){
@@ -172,28 +158,39 @@ function doSearchS(app) {
       users.data[i].min=users.data[i].expected.min;
       users.data[i].max=users.data[i].expected.max;
     }
-	}
+  }
+  
 	catch (err) {
-          console.error(err);
+    console.error(err);
 	  errors = wsErrors(err);
-	}
-	if (users.length === 0) {
-	  errors = {_: 'no users found for specified criteria; please retry'};
-	}
-     // }
-   // }
-    let model;
-   // let template;
-    // if (users.length > 0) {
-    //   template = 'details';
-      const val =
-	users.data.map((u) => ({id: u.id, fields: fieldsWithValuesSensor(u)}));
-      model = { base: app.locals.base, users: val ,fields:FIELDS_S};
-    // }
-    // else {
-    //   template =  'search';
-    //   model = errorModel(app, search, errors);
-    // }
+  }
+  let model;
+
+  if(errors){
+     
+    model = { base: app.locals.base, err: errors ,fields:FIELDS_S};
+  }
+  else{
+ 
+   let n1;
+   let p1;
+   const val =
+   users.data.map((u) => ({id: u.id, fields: fieldsWithValuesSensor(u)}));
+       model = { base: app.locals.base, users: val ,fields:FIELDS_S};
+   
+    let n="";
+   let p="";
+   if(users.next){
+    n=users.next.split('?')[1];
+    n1="?"+n;
+   }
+   if(users.prev){
+    p=users.prev.split('?')[1];
+    p1="?"+p;
+  }
+  model = { base: app.locals.base,users:val,fields:FIELDS_S,next:n1,prev:p1};
+} 
+  
     const html = doMustache(app, 'tst-sensors-search', model);
     res.send(html);
   };
@@ -203,12 +200,11 @@ function doSearchS(app) {
 function addST(app) {
   return async function(req, res) {
     const user = getNonEmptyValues(req.body);
-    let errors = validate(user, ['id']);
+    let errors = validate(user, ['id','manufacturer','modelNumber','quantity','min','max']);
     const minimum=user.min;
     const maximum=user.max;
     user.limits={minimum,maximum};
-    
-    //if condn
+  
     if(user.quantity==='pressure'){
       user.unit='PSI';
     }
@@ -221,25 +217,22 @@ function addST(app) {
     else{
     user.unit='C';
     }
-    //const isUpdate = req.body.submit === 'update';
+ 
     if (!errors) {
       try {
-	//if (isUpdate) {
+
 	  await app.locals.model.update('sensor-types',user);
-	// }
-	// else {
-	//   await app.locals.model.create(user);
-	// }
+
 	res.redirect(`${app.locals.base}/tst-sensor-types-search.html`);
       }
       catch (err) {
-	console.error(err);
+	//console.error(err);
 	errors = wsErrors(err);
       }
     }
     if (errors) {
       const model = errorModel(app, user, errors);
-      const html = doMustache(app,'tst-sensor-types-search', model);
+      const html = doMustache(app,'tst-sensor-types-add', model);
       res.send(html);
     }
   };
@@ -248,32 +241,27 @@ function addST(app) {
 function addS(app) {
   return async function(req, res) {
     const user = getNonEmptyValuesSensor(req.body);
-    let errors = validateSensor(user, ['id']);
+    let errors = validateSensor(user, ['id','model','period','min','max']);
     const min=user.min;
     const max=user.max;
     user.expected={min,max};
     
-    //if condn
     
-    //const isUpdate = req.body.submit === 'update';
     if (!errors) {
       try {
-	//if (isUpdate) {
+
 	  await app.locals.model.update('sensors',user);
-	// }
-	// else {
-	//   await app.locals.model.create(user);
-	// }
+
 	res.redirect(`${app.locals.base}/tst-sensors-search.html`);
       }
       catch (err) {
-	console.error(err);
+
 	errors = wsErrors(err);
       }
     }
     if (errors) {
       const model = errorModelSensor(app, user, errors);
-      const html = doMustache(app,'tst-sensors-search', model);
+      const html = doMustache(app,'tst-sensors-add', model);
       res.send(html);
     }
   };
@@ -286,7 +274,7 @@ const FIELDS_INFO = {
     isSearchST: true,
     isAddST:true,
     isRequired: true,
-    regex: /^\w+$/,
+    regex: /^[a-zA-Z\d-_]+$/,
     error: 'User Id field can only contain alphanumerics, - or _ characters',
   },
   manufacturer: {
@@ -294,7 +282,7 @@ const FIELDS_INFO = {
     isRequired: true,
     isAddST:true,
     isSearchST :true,
-    regex: /^\w+$/,
+    regex: /^([a-zA-Z' -])*$/,
     error: 'Can contain only \-, \', space or alphabetic characters',
   },
   modelNumber: {
@@ -302,35 +290,32 @@ const FIELDS_INFO = {
     isRequired: true,
     isAddST:true,
     isSearchST:true,
-    regex: /^\w+$/,
+    regex: /^([a-zA-Z0-9' -])*$/,
     error: 'Can contain only \-, \', space or alphanumeric characters.',
   },
   quantity: {
     friendlyName: 'Quantity',
-    //isRequired: true,
     isSearchST :true,
     isAddST:true,
     isSelect:true,
-    regex: /^\w+$/,
+    regex: /\b(temperature|pressure|flow|humidity)\b/,
     error: 'Can only have internal values temperature, pressure, flow or humidity.',
   },
-  
   min: {
     friendlyName: 'Minimum Limit',
-    //isSearch :true,
     isAddST:true,
     isRequired: true,
-    regex: /^\w+$/,
+    regex: /^(\d*\.)?\d+$/,
     error: 'A number.',
   },
   max: {
     friendlyName: 'Maximum Limit',
-    //isSearch :true,
     isRequired: true,
     isAddST:true,
-    regex: /^\w+$/,
+    regex: /^(\d*\.)?\d+$/,
     error: 'A number.',
-  }
+  },
+  _index: '5',
 };
 const FIELDS_INFO_S = {
   id: {
@@ -338,7 +323,7 @@ const FIELDS_INFO_S = {
     isSearchS: true,
     isAddS:true,
     isRequiredSensor: true,
-    regex: /^\w+$/,
+    regex: /^[a-zA-Z\d-_]+$/,
     error: ' Can only contain alphanumerics, - or _ characters.',
   },
   model: {
@@ -346,7 +331,7 @@ const FIELDS_INFO_S = {
     isRequiredSensor: true,
     isAddS:true,
     isSearchS :true,
-    regex: /^\w+$/,
+    regex: /^[a-zA-Z\d-_]+$/,
     error: ' Can only contain alphanumerics, - or _ characters.',
   },
   period: {
@@ -354,23 +339,24 @@ const FIELDS_INFO_S = {
     isRequiredSensor: true,
     isAddS:true,
     isSearchS :true,
-    regex: /^\w+$/,
+    regex: /^[-+]?\d+$/,
     error: 'Must be an integer.',
   },
   min: {
-    friendlyName: 'Minimum Limit',
+    friendlyName: 'Expected Minimum',
     isRequiredSensor: true,
     isAddS:true,
-    regex: /^\w+$/,
+    regex: /^(\d*\.)?\d+$/,
     error: 'A number.',
   },
   max: {
-    friendlyName: 'Maximum Limit',
+    friendlyName: 'Expected Maximum ',
     isAddS:true,
     isRequiredSensor: true,
-    regex: /^\w+$/,
+    regex: /^(\d*\.)?\d+$/,
     error: 'A number.',
-  }
+  },
+  _index: '5',
 };
 const FIELDS =
   Object.keys(FIELDS_INFO).map((n) => Object.assign({name: n}, FIELDS_INFO[n]));
@@ -379,13 +365,13 @@ const FIELDS_S =
   Object.keys(FIELDS_INFO_S).map((n) => Object.assign({name: n}, FIELDS_INFO_S[n]));
 
 
-/************************** Field Utilities ****************************/
-
-/** Return copy of FIELDS with values and errors injected into it. */
 function fieldsWithValues(values, errors={}) {
   return FIELDS.map(function (info) {
     const name = info.name;
     const extraInfo = { value: values[name] };
+    if(extraInfo.value===0){
+      extraInfo.value='0';
+    }
     if (errors[name]) extraInfo.errorMessage = errors[name];
     return Object.assign(extraInfo, info);
   });
@@ -395,14 +381,14 @@ function fieldsWithValuesSensor(values, errors={}) {
   return FIELDS_S.map(function (info) {
     const name = info.name;
     const extraInfo = { value: values[name] };
+    if(extraInfo.value===0){
+      extraInfo.value='0';
+    }
     if (errors[name]) extraInfo.errorMessage = errors[name];
     return Object.assign(extraInfo, info);
   });
 }
 
-/** Given map of field values and requires containing list of required
- *  fields, validate values.  Return errors hash or falsy if no errors.
- */
 function validate(values, requires=[]) {
   const errors = {};
   requires.forEach(function (name) {
@@ -496,15 +482,15 @@ function doMustache(app, templateId, view) {
   return mustache.render(app.templates[templateId], view, templates);
 }
 
-// function errorPage(app, errors, res) {
-//   if (!Array.isArray(errors)) errors = [ errors ];
-//   const html = doMustache(app, 'errors', { errors: errors });
-//   res.send(html);
-// }
+function errorPage(app, errors, res) {
+  if (!Array.isArray(errors)) errors = [ errors ];
+  const html = doMustache(app, 'errors', { errors: errors });
+  res.send(html);
+}
 
-// function isNonEmpty(v) {
-//   return (v !== undefined) && v.trim().length > 0;
-// }
+function isNonEmpty(v) {
+  return (v !== undefined) && v.trim().length > 0;
+}
 
 function setupTemplates(app) {
   app.templates = {};

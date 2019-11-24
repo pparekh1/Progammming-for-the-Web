@@ -17,7 +17,7 @@
   {{#isAddS}}
 	    <label>
 	    <span class="label">
-	      {{#isRequiredSensor}}* {{/isRequiredSensor}}{{friendlyName}}
+	     {{friendlyName}}{{#isRequiredSensor}}* {{/isRequiredSensor}}
 	    </span>
       {{#isRequiredSensor}}
 	    <input name="{{name}}" {{#type}}type="{{type}}"{{/type}}

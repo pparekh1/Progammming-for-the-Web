@@ -11,6 +11,9 @@
         <li class="error">{{.}}</li>
       {{/errors}}
     </ul>
+    {{#err}}
+    <h4 class="zero" font color="red">*No Results found!</h4>
+	   {{/err}}
     <form method="GET" action="{{{base}}}/tst-sensors-search.html">
    
 	{{#fields}}
@@ -71,9 +74,14 @@
    </table>
   </body>
   
-   <div class="scroll">
-    <a class="tst-prev" href="?_index&#x3D;5" rel="prev">&lt;&lt;</a>
-    <a class="tst-next" href="?_index&#x3D;15" rel="next">&gt;&gt;</a>
+    <div class="scroll">
+  {{#prev}}
+    <a  href="{{prev}}"rel="prev">&lt;&lt;</a>
+  {{/prev}}
+  {{#next}}
+    <a  href="{{next}}"rel="next">&gt;&gt;</a>
+  {{/next}}
+   
     </div>
     
     {{>footer}}
